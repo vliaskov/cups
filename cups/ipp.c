@@ -4725,6 +4725,7 @@ ippValidateAttribute(
   ipp_attribute_t *colattr;		/* Collection attribute */
   regex_t	re;			/* Regular expression */
   ipp_uchar_t	*date;			/* Current date value */
+  char	        eos = 0;		/* unexpected end of string */
 
 
  /*
@@ -4910,27 +4911,39 @@ ippValidateAttribute(
 	    if ((*ptr & 0xe0) == 0xc0)
 	    {
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	    }
 	    else if ((*ptr & 0xf0) == 0xe0)
 	    {
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	    }
 	    else if ((*ptr & 0xf8) == 0xf0)
 	    {
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	    }
@@ -4939,6 +4952,12 @@ ippValidateAttribute(
 	    else if ((*ptr < ' ' && *ptr != '\n' && *ptr != '\r' && *ptr != '\t') || *ptr == 0x7f)
 	      break;
 	  }
+
+          if (eos)
+          {
+	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad text value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.2)."), attr->name, attr->values[i].string.text);
+	      return (0);
+          }
 
           if (*ptr)
           {
@@ -4971,27 +4990,39 @@ ippValidateAttribute(
 	    if ((*ptr & 0xe0) == 0xc0)
 	    {
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	    }
 	    else if ((*ptr & 0xf0) == 0xe0)
 	    {
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	    }
 	    else if ((*ptr & 0xf8) == 0xf0)
 	    {
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	      ptr ++;
+	      if (*ptr == '\0')
+	        eos = 1;
 	      if ((*ptr & 0xc0) != 0x80)
 	        break;
 	    }
@@ -5000,6 +5031,12 @@ ippValidateAttribute(
 	    else if (*ptr < ' ' || *ptr == 0x7f)
 	      break;
 	  }
+
+	  if (eos)
+	  {
+	      ipp_set_error(IPP_STATUS_ERROR_BAD_REQUEST, _("\"%s\": Bad name value \"%s\" - bad UTF-8 sequence (RFC 8011 section 5.1.3)."), attr->name, attr->values[i].string.text);
+	      return (0);
+          }
 
 	  if (*ptr)
 	  {
